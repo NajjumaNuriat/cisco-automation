@@ -1,0 +1,17 @@
+{
+  "vlans": [
+    {"id": 20, "name": "Users"},
+    {"id": 30, "name": "HR"},
+    {"id": 40, "name": "Finance"}, 
+    {"id": 50, "name": "IT"},
+    {"id": 60, "name": "Operations"},
+    {"id": 70, "name": "Guest"}
+  ],
+  "interfaces": [
+    {"interface": "FastEthernet0/1", "description": "HR Workstation"},
+    {"interface": "FastEthernet0/2", "description": "Finance Printer"},
+    {"interface": "FastEthernet0/3", "description": "IT Server"},
+    {"interface": "FastEthernet0/4", "description": "Operations PC"},
+    {"interface": "FastEthernet0/24", "description": "Management Server"}
+  ]
+}
