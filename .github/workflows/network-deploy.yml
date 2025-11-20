@@ -1,0 +1,65 @@
+name: Network Configuration CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  validate-config:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          pip install -r scripts/requirements.txt
+
+      - name: Validate configuration syntax
+        run: |
+          python -m json.tool configs/vlan_config.json
+          echo "✅ Configuration syntax is valid"
+
+      - name: Dry run - Show what will be deployed
+        run: |
+          echo "🚀 Configuration that will be applied:"
+          cat configs/vlan_config.json
+          echo ""
+          echo "🎯 Target switch: Core-Switch-1 (192.168.2.129)"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: validate-config
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          pip install -r scripts/requirements.txt
+
+      - name: Deploy to network device
+        run: |
+          cd scripts
+          python network_ops.py
+        env:
+          SWITCH_IP: ${{ secrets.SWITCH_IP }}
+          SWITCH_USERNAME: ${{ secrets.SWITCH_USERNAME }}
+          SWITCH_PASSWORD: ${{ secrets.SWITCH_PASSWORD }}
+          SWITCH_ENABLE_PASSWORD: ${{ secrets.SWITCH_ENABLE_PASSWORD }}
