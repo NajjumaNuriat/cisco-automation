@@ -12,14 +12,28 @@ import sys
 def load_config(config_file):
     """Load configuration from JSON file"""
     try:
+        # If relative path, make it absolute relative to this script
+        if not os.path.isabs(config_file):
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            config_file = os.path.join(script_dir, config_file)
+            
+        print(f"📁 Loading config from: {config_file}")
+        
         with open(config_file, 'r') as file:
             return json.load(file)
     except FileNotFoundError:
-        print(f"Error: Config file {config_file} not found")
+        print(f"❌ Error: Config file {config_file} not found")
+        # Show available files
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        print(f"📂 Files in script directory ({script_dir}):")
+        for file in os.listdir(script_dir):
+            print(f"   - {file}")
         sys.exit(1)
     except json.JSONDecodeError:
-        print("Error: Invalid JSON format")
+        print("❌ Error: Invalid JSON format")
         sys.exit(1)
+
+
 
 def connect_to_switch(device_info):
     """Establish SSH connection to switch"""
@@ -74,20 +88,49 @@ def show_interface_status(connection):
     output = connection.send_command("show interfaces description")
     print(output)
 
+def test_connectivity(host):
+    """Test if we can reach the switch"""
+    import socket
+    try:
+        print(f"🔍 Testing connectivity to {host}...")
+        socket.setdefaulttimeout(3)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        result = sock.connect_ex((host, 22))
+        sock.close()
+        if result == 0:
+            print("✅ Switch is reachable on port 22")
+            return True
+        else:
+            print(f"❌ Cannot reach {host} on port 22")
+            print("   Please check:")
+            print("   1. Packet Tracer is running")
+            print("   2. Switch IP is 192.168.2.129")
+            print("   3. SSH is enabled on the switch")
+            print("   4. Your PC can ping the switch in Packet Tracer")
+            return False
+    except Exception as e:
+        print(f"❌ Connectivity test failed: {e}")
+        return False
+
 def main():
     # Device connection parameters for Core-Switch-1
     device = {
         'device_type': 'cisco_ios',
-        'host': os.getenv('SWITCH_IP', '192.168.2.129'),  # Updated IP
+        'host': os.getenv('SWITCH_IP', '192.168.2.129'),
         'username': os.getenv('SWITCH_USERNAME', 'admin'),
-        'password': os.getenv('SWITCH_PASSWORD', 'cisco'),  # Updated password
-        'secret': os.getenv('SWITCH_ENABLE_PASSWORD', 'cisco'),  # Updated enable secret
+        'password': os.getenv('SWITCH_PASSWORD', 'cisco'),
+        'secret': os.getenv('SWITCH_ENABLE_PASSWORD', 'cisco'),
         'port': 22,
     }
+    # Test connectivity first
+    if not test_connectivity(device['host']):
+        sys.exit(1)
     
-    # Load configuration
-    config_path = os.path.join(os.path.dirname(__file__), '../configs/vlan_config.json')
+    # Load configuration - use relative path that works from scripts directory
+    config_path = '../configs/vlan_config.json'  # Go up one level from scripts/ to find configs/
     config = load_config(config_path)
+    
+
     
     # Connect to switch
     connection = connect_to_switch(device)
