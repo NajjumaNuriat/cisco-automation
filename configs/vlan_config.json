@@ -1,17 +1,14 @@
 {
   "vlans": [
-    {"id": 20, "name": "Users"},
-    {"id": 30, "name": "HR"},
-    {"id": 40, "name": "Finance"}, 
-    {"id": 50, "name": "IT"},
-    {"id": 60, "name": "Operations"},
-    {"id": 70, "name": "Guest"}
+    {"id": 60, "name": "Guest"},
+    {"id": 70, "name": "VoIP"},
+    {"id": 80, "name": "Security"},
+    {"id": 90, "name": "IoT"}
   ],
   "interfaces": [
-    {"interface": "FastEthernet0/1", "description": "HR Workstation"},
-    {"interface": "FastEthernet0/2", "description": "Finance Printer"},
-    {"interface": "FastEthernet0/3", "description": "IT Server"},
-    {"interface": "FastEthernet0/4", "description": "Operations PC"},
-    {"interface": "FastEthernet0/24", "description": "Management Server"}
+    {"interface": "FastEthernet0/8", "description": "Guest WiFi Access Point", "vlan": 60, "mode": "access"},
+    {"interface": "FastEthernet0/9", "description": "VoIP Phone System", "vlan": 70, "mode": "access"},
+    {"interface": "FastEthernet0/10", "description": "Security Camera", "vlan": 80, "mode": "access"},
+    {"interface": "FastEthernet0/11", "description": "IoT Device", "vlan": 90, "mode": "access"}
   ]
 }

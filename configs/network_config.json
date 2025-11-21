@@ -1,0 +1,32 @@
+{
+  "network": {
+    "subnet": "172.20.10.0/28",
+    "gateway": "172.20.10.1",
+    "dns_servers": ["8.8.8.8", "8.8.4.4"]
+  },
+  "devices": {
+    "core_switch": {
+      "name": "Core-Switch-1",
+      "ip_address": "172.20.10.3",
+      "device_type": "cisco_ios",
+      "credentials": {
+        "username": "admin",
+        "password": "cisco",
+        "enable_password": "cisco",
+        "port": 22
+      }
+    }
+  },
+  "vlans": {
+    "10": {"name": "Management", "purpose": "Network management"},
+    "20": {"name": "HR", "purpose": "Human Resources department"},
+    "30": {"name": "Finance", "purpose": "Finance department"},
+    "40": {"name": "IT", "purpose": "IT department"},
+    "50": {"name": "Operations", "purpose": "Operations department"}
+  },
+  "automation": {
+    "ssh_timeout": 10,
+    "config_timeout": 30,
+    "retry_attempts": 3
+  }
+}

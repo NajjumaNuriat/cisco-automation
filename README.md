@@ -1,37 +1,43 @@
-# Cisco Network Automation
+# Network Automation CI/CD
 
-Simple Python automation for VLAN creation and interface description updates.
-
-## Switch Configuration
-
-- **Device**: Core-Switch-1
-- **Management IP**: 192.168.2.129
-- **Username**: admin
-- **Password**: cisco
-- **Enable Secret**: cisco
+Automated VLAN and interface configuration using GitHub Actions.
 
 ## Setup
 
-1. Clone this repository
-2. Configure GitHub Secrets:
+1. **Configure GitHub Secrets** in your repository:
 
-   - SWITCH_IP: 192.168.2.129
-   - SWITCH_USERNAME: admin
-   - SWITCH_PASSWORD: cisco
-   - SWITCH_ENABLE_PASSWORD: cisco
+   - `SWITCH_IP`: IP address of your network device
+   - `SWITCH_USERNAME`: SSH username
+   - `SWITCH_PASSWORD`: SSH password
+   - `SWITCH_ENABLE_PASSWORD`: Enable password
 
-3. Update `configs/vlan_config.json` with your desired VLAN and interface configurations
+2. **Update Configuration Files**:
+   - `configs/network_config.json`: Network topology and device info
+   - `configs/vlan_config.json`: VLANs and interfaces to configure
 
 ## Usage
 
-- Push to main branch to trigger syntax validation and dry run
-- Use "Run workflow" in GitHub Actions for manual deployment
-- The script will show before/after configuration states
+### Continuous Integration (Automatic)
 
-## Current VLAN Structure
+- Every push/PR validates configuration syntax
+- Shows deployment plan without making changes
 
-- VLAN 10: Management (pre-configured)
-- VLAN 20: Users (pre-configured)
-- VLAN 30: HR (pre-configured)
-- VLAN 40: Finance (pre-configured)
-- VLAN 50: IT (pre-configured)
+### Continuous Deployment (Manual)
+
+- Go to GitHub Actions → "Network Configuration CI/CD"
+- Click "Run workflow" to deploy changes
+- Requires manual approval for safety
+
+## Configuration
+
+Edit `configs/vlan_config.json` to:
+
+- Add/remove VLANs
+- Configure interface descriptions
+- Assign VLANs to ports
+
+## Security
+
+- Credentials stored in GitHub Secrets
+- Manual deployment required
+- Configuration validated before deployment

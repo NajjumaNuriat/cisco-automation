@@ -8,38 +8,48 @@ on:
   workflow_dispatch: # Manual trigger
 
 jobs:
-  validate-config:
+  validate-configuration:
+    name: Validate Configuration
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.9"
-
-      - name: Install dependencies
+      - name: Validate JSON syntax
         run: |
-          pip install -r scripts/requirements.txt
-
-      - name: Validate configuration syntax
-        run: |
+          echo "🔍 Validating configuration files..."
+          python -m json.tool configs/network_config.json
           python -m json.tool configs/vlan_config.json
-          echo "✅ Configuration syntax is valid"
+          echo "✅ All configuration files are valid"
 
-      - name: Dry run - Show what will be deployed
+      - name: Show deployment plan
         run: |
-          echo "🚀 Configuration that will be applied:"
-          cat configs/vlan_config.json
+          echo "🚀 Deployment Plan:"
+          echo "-------------------"
+          echo "VLANs to be created:"
+          python3 -c "
+          import json
+          with open('configs/vlan_config.json') as f:
+              config = json.load(f)
+              for vlan in config['vlans']:
+                  print(f'  - VLAN {vlan[\"id\"]}: {vlan[\"name\"]}')
+          "
           echo ""
-          echo "🎯 Target switch: Core-Switch-1 (192.168.2.129)"
+          echo "Interfaces to be configured:"
+          python3 -c "
+          import json
+          with open('configs/vlan_config.json') as f:
+              config = json.load(f)
+              for interface in config['interfaces']:
+                  print(f'  - {interface[\"interface\"]}: {interface[\"description\"]}')
+          "
 
-  deploy:
+  deploy-network:
+    name: Deploy Network Configuration
     runs-on: ubuntu-latest
-    needs: validate-config
-    if: github.event_name == 'workflow_dispatch'
+    needs: validate-configuration
+    if: github.event_name == 'workflow_dispatch' # Manual deployment only
 
     steps:
       - name: Checkout code
@@ -54,7 +64,7 @@ jobs:
         run: |
           pip install -r scripts/requirements.txt
 
-      - name: Deploy to network device
+      - name: Deploy network configuration
         run: |
           cd scripts
           python network_ops.py
@@ -63,3 +73,9 @@ jobs:
           SWITCH_USERNAME: ${{ secrets.SWITCH_USERNAME }}
           SWITCH_PASSWORD: ${{ secrets.SWITCH_PASSWORD }}
           SWITCH_ENABLE_PASSWORD: ${{ secrets.SWITCH_ENABLE_PASSWORD }}
+
+      - name: Deployment summary
+        run: |
+          echo "🎉 Network deployment completed successfully!"
+          echo "Switch: ${{ secrets.SWITCH_IP }}"
+          echo "Timestamp: $(date)"
