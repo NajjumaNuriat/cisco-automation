@@ -2,7 +2,7 @@
 
 Automated VLAN and interface configuration using GitHub Actions.
 
-## Setup
+## Manual Setup requiring a physical network device
 
 1. **Configure GitHub Secrets** in your repository:
 
@@ -42,7 +42,7 @@ Edit `configs/vlan_config.json` to:
 - Manual deployment required
 - Configuration validated before deployment
 
-# Cisco IOS XR Network Automation
+# Cisco IOS XR Network Automation for testing cloud environents
 
 CI/CD pipeline for automating VLAN and interface configuration on Cisco IOS XR.
 

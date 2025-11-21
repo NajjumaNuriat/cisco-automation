@@ -18,14 +18,14 @@ jobs:
 
       - name: Validate JSON syntax
         run: |
-          echo "🔍 Validating configuration files..."
+          echo "...............Validating configuration files..."
           python -m json.tool configs/network_config.json
           python -m json.tool configs/vlan_config.json
-          echo "✅ All configuration files are valid"
+          echo "All configuration files are valid"
 
       - name: Show deployment plan
         run: |
-          echo "🚀 IOS XR Deployment Plan:"
+          echo "IOS XR Deployment Plan:"
           echo "--------------------------"
           echo "Target: sandbox-iosxr-1.cisco.com"
           echo "VLANs to be created:"
@@ -58,9 +58,9 @@ jobs:
 
       - name: Deploy to IOS XR Sandbox
         run: |
-          echo "🎯 Deploying to Cisco IOS XRv9000 Sandbox..."
-          echo "📍 Target: sandbox-iosxr-1.cisco.com"
-          echo "📢 REMEMBER: This is a SHARED sandbox - be respectful!"
+          echo "........Deploying to Cisco IOS XRv9000 Sandbox..."
+          echo "Target: sandbox-iosxr-1.cisco.com"
+          echo "REMEMBER: This is a SHARED sandbox - be respectful!"
           cd scripts
           python iosxr_network_ops.py
         env:
@@ -71,6 +71,6 @@ jobs:
 
       - name: Deployment summary
         run: |
-          echo "🎉 IOS XR deployment completed successfully!"
+          echo ""IOS XR deployment completed successfully!"
           echo "Switch: ${{ secrets.IOSXR_IP }}"
           echo "Timestamp: $(date)"

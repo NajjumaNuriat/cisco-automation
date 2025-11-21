@@ -13,17 +13,17 @@ def load_config(config_file):
         with open(config_file, 'r') as file:
             return json.load(file)
     except Exception as e:
-        print(f"❌ Error loading config: {e}")
+        print(f"Error loading config: {e}")
         sys.exit(1)
 
 def connect_to_switch(device_info):
     """Establish SSH connection to switch"""
     try:
         connection = ConnectHandler(**device_info)
-        print("✅ Successfully connected to switch")
+        print(" Successfully connected to switch")
         return connection
     except Exception as e:
-        print(f"❌ Connection failed: {str(e)}")
+        print(f" Connection failed: {str(e)}")
         sys.exit(1)
 
 def create_vlans(connection, vlans):
@@ -34,7 +34,7 @@ def create_vlans(connection, vlans):
         commands.append(f"name {vlan['name']}")
     
     if commands:
-        print("🔄 Creating VLANs...")
+        print("..... Creating VLANs...")
         output = connection.send_config_set(commands)
         print(output)
         return True
@@ -56,13 +56,13 @@ def configure_interfaces(connection, interfaces):
         
         commands.append("no shutdown")
         
-        print(f"🔧 Configuring {interface['interface']}...")
+        print(f"...........configuring {interface['interface']}...")
         output = connection.send_config_set(commands)
         print(output)
 
 def save_config(connection):
     """Save the configuration"""
-    print("💾 Saving configuration...")
+    print(".......saving configuration...")
     output = connection.send_command("write memory")
     print(output)
 
@@ -82,16 +82,16 @@ def main():
     missing_vars = [var for var in required_vars if not os.getenv(var)]
     
     if missing_vars:
-        print(f"❌ Missing required environment variables: {', '.join(missing_vars)}")
+        print(f"Missing required environment variables: {', '.join(missing_vars)}")
         sys.exit(1)
     
-    print(f"🎯 Target Switch: {device_info['host']}")
+    print(f"Target Switch: {device_info['host']}")
     
     # Load configurations
     vlan_config = load_config('configs/vlan_config.json')
     network_config = load_config('configs/network_config.json')
     
-    print(f"📁 Configuration: {len(vlan_config['vlans'])} VLANs, {len(vlan_config['interfaces'])} interfaces")
+    print(f"Configuration: {len(vlan_config['vlans'])} VLANs, {len(vlan_config['interfaces'])} interfaces")
     
     # Connect to switch
     connection = connect_to_switch(device_info)
@@ -115,13 +115,13 @@ def main():
         save_config(connection)
         
         # Show final status
-        print("✅ Configuration completed successfully!")
-        print("📋 Final VLAN configuration:")
+        print("Configuration completed successfully!")
+        print("Final VLAN configuration:")
         final_output = connection.send_command("show vlan brief")
         print(final_output)
         
     except Exception as e:
-        print(f"❌ Error during configuration: {str(e)}")
+        print(f"Error during configuration: {str(e)}")
         sys.exit(1)
     finally:
         connection.disconnect()
