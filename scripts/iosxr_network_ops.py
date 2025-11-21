@@ -14,7 +14,7 @@ def load_config(config_file):
         with open(config_file, 'r') as file:
             return json.load(file)
     except Exception as e:
-        print(f"Error loading config: {e}")
+        print(f" Error loading config: {e}")
         sys.exit(1)
 
 def connect_to_iosxr(device_info):
@@ -25,23 +25,51 @@ def connect_to_iosxr(device_info):
         device_info['timeout'] = 30
         device_info['session_timeout'] = 60
         
-        print(f".......onnecting to {device_info['host']}:{device_info['port']}...")
+        print(f" Connecting to {device_info['host']}:{device_info['port']}...")
         connection = ConnectHandler(**device_info)
         print("Successfully connected to IOS XR sandbox")
         return connection
     except Exception as e:
-        print(f"IOS XR connection failed: {str(e)}")
-        print("\nTroubleshooting tips:")
+        print(f" IOS XR connection failed: {str(e)}")
+        print("\n Troubleshooting tips:")
         print("   1. Check if sandbox-iosxr-1.cisco.com is accessible")
         print("   2. Verify credentials: admin/C1sco12345")
         print("   3. Ensure your network can reach Cisco DevNet")
         sys.exit(1)
 
+def cleanup_existing_configs(connection):
+    """Clean up existing subinterface configurations"""
+    print("\n Cleaning up existing subinterfaces...")
+    
+    # List of subinterfaces to remove
+    subinterfaces_to_remove = [
+        "GigabitEthernet0/0/0/0.100",
+        "GigabitEthernet0/0/0/0.400", 
+        "GigabitEthernet0/0/0/1.200",
+        "GigabitEthernet0/0/0/2.300"
+    ]
+    
+    for subif in subinterfaces_to_remove:
+        try:
+            commands = [f"no interface {subif}"]
+            output = connection.send_config_set(commands)
+            commit_output = connection.send_command("commit")
+            print(f"    Removed {subif}")
+        except Exception as e:
+            print(f"    Could not remove {subif}: {e}")
+
 def configure_subinterfaces(connection, subinterfaces):
     """Configure VLAN subinterfaces on IOS XR"""
-    print("Configuring VLAN subinterfaces...")
+    print(" Configuring VLAN subinterfaces...")
+    
+    # Track which interfaces we've configured to avoid duplicates
+    configured_interfaces = set()
     
     for subif in subinterfaces:
+        if subif['subinterface'] in configured_interfaces:
+            print(f"     Skipping duplicate: {subif['subinterface']}")
+            continue
+            
         commands = [
             f"interface {subif['parent_interface']}",
             "no shutdown",
@@ -52,7 +80,7 @@ def configure_subinterfaces(connection, subinterfaces):
             "no shutdown"
         ]
         
-        print(f"Configuring {subif['subinterface']} for VLAN {subif['vlan_id']}...")
+        print(f" Configuring {subif['subinterface']} for VLAN {subif['vlan_id']}...")
         
         try:
             # Send configuration commands
@@ -60,17 +88,18 @@ def configure_subinterfaces(connection, subinterfaces):
             
             # Commit configuration (IOS XR specific)
             commit_output = connection.send_command("commit", expect_string=r"#")
-            print(f" {subif['subinterface']} configured and committed")
+            print(f"    {subif['subinterface']} configured and committed")
+            configured_interfaces.add(subif['subinterface'])
             
         except Exception as e:
-            print(f"Error configuring {subif['subinterface']}: {e}")
+            print(f" Error configuring {subif['subinterface']}: {e}")
 
 def configure_static_routes(connection, routes):
     """Configure static routes on IOS XR"""
     if not routes:
         return
         
-    print("Configuring static routes...")
+    print("  Configuring static routes...")
     
     commands = ["router static", "address-family ipv4 unicast"]
     
@@ -81,94 +110,73 @@ def configure_static_routes(connection, routes):
     try:
         output = connection.send_config_set(commands)
         commit_output = connection.send_command("commit", expect_string=r"#")
-        print(" Static routes configured and committed")
+        print("    Static routes configured and committed")
     except Exception as e:
         print(f" Error configuring static routes: {e}")
+
 def verify_iosxr_configuration(connection):
-    """Verify IOS XR configuration with proper command syntax"""
-    print("\n....Verifying IOS XR Configuration...")
+    """Verify IOS XR configuration with proper commands"""
+    print("\n Verifying IOS XR Configuration...")
     
     try:
-        # Show interfaces brief (correct command for IOS XR)
-        print("\n Interface Status:")
+        # 1. Show interface status (correct IOS XR command)
+        print("\n📡 Interface Status:")
         interfaces_output = connection.send_command("show interfaces brief")
         print(interfaces_output)
         
-        # Show subinterfaces - use different approach for IOS XR
-        print("\n Subinterface Details:")
-        try:
-            # Method 1: Show all interfaces and filter in Python
-            all_interfaces = connection.send_command("show interfaces description")
-            print("All Interfaces:")
-            print(all_interfaces)
-        except:
-            # Method 2: Use IOS XR specific filtering
-            subif_output = connection.send_command("show interfaces | include \"\\.[0-9]\"")
-            print("Subinterfaces found:")
-            print(subif_output if subif_output else "No subinterfaces found")
-        
-        # Show routes (correct command for IOS XR)
-        print("\n IPv4 Routing Table:")
-        routes_output = connection.send_command("show route ipv4")
-        # Show only our configured routes to avoid too much output
-        for line in routes_output.split('\n'):
-            if "192.168" in line or "connected" in line.lower():
-                print(f"   {line}")
-        
-        # Show running config for subinterfaces (simplified)
-        print("\nSubinterface Configuration:")
+        # 2. Show our specific subinterfaces
+        print("\n Our Configured Subinterfaces:")
         config_output = connection.send_command("show running-config interface")
-        # Extract just the relevant parts
-        lines = config_output.split('\n')
-        in_subinterface = False
-        for line in lines:
-            if line.strip().startswith('interface') and '.' in line:
-                in_subinterface = True
-                print(line)
-            elif line.strip().startswith('interface') and not '.' in line:
-                in_subinterface = False
-            elif in_subinterface and line.strip() and not line.strip().startswith('!'):
+        
+        # Check if our subinterfaces exist in the config
+        our_subinterfaces = [
+            "GigabitEthernet0/0/0/0.100",
+            "GigabitEthernet0/0/0/1.200", 
+            "GigabitEthernet0/0/0/2.300"
+        ]
+        
+        for subif in our_subinterfaces:
+            if subif in config_output:
+                print(f"    {subif} - Found in configuration")
+            else:
+                print(f"    {subif} - NOT found in configuration")
+        
+        # 3. Show IP addresses (correct IOS XR command)
+        print("\n IP Address Assignment:")
+        ip_output = connection.send_command("show ipv4 interface brief")
+        print(ip_output)
+        
+        # 4. Show routes (correct IOS XR command)
+        print("\n IPv4 Routing Table (Our Networks):")
+        routes_output = connection.send_command("show route ipv4")
+        # Filter to show only our configured networks
+        for line in routes_output.split('\n'):
+            if any(network in line for network in ['192.168.10', '192.168.20', '192.168.30', '192.168.100', '192.168.200']):
                 print(f"   {line}")
         
     except Exception as e:
-        print(f"Verification failed: {e}")
+        print(f" Verification failed: {e}")
+
 def save_iosxr_config(connection):
     """Save configuration on IOS XR"""
-    print("💾 Saving IOS XR configuration...")
+    print(" Saving IOS XR configuration...")
     try:
         # IOS XR uses different save command
         save_output = connection.send_command("commit", expect_string=r"#")
-        print(" Configuration committed (changes applied)")
+        print("   Configuration committed (changes applied)")
         
         # Try to save to startup (may not work in sandbox)
         try:
             save_output = connection.send_command("admin save running-config startup-config", expect_string=r"#")
             if "successful" in save_output.lower() or "[ok]" in save_output.lower():
-                print(" Configuration saved to startup")
+                print("   Configuration saved to startup")
             else:
-                print(" Configuration may not persist after sandbox reset")
+                print("    Configuration may not persist after sandbox reset")
         except:
-            print(" Cannot save to startup in sandbox (normal for shared environment)")
+            print("     Cannot save to startup in sandbox (normal for shared environment)")
             
     except Exception as e:
-        print(f" Save operation note: {e}")        
-        
-def cleanup_configuration(connection):
-    """Optional: Clean up configuration (for shared sandbox)"""
-    print("\nCleaning up configuration (respecting shared sandbox)...")
-    try:
-        # Remove our subinterfaces
-        commands = [
-            "no interface GigabitEthernet0/0/0/0.100",
-            "no interface GigabitEthernet0/0/0/1.200", 
-            "no interface GigabitEthernet0/0/0/2.300",
-            "no router static"
-        ]
-        output = connection.send_config_set(commands)
-        commit_output = connection.send_command("commit")
-        print(" Configuration cleaned up")
-    except Exception as e:
-        print(f"Cleanup not required: {e}")
+        print(f" Save operation note: {e}")
 
 def main():
     # IOS XR sandbox connection parameters
@@ -181,10 +189,10 @@ def main():
         'port': int(os.getenv('SWITCH_PORT', 22)),
     }
     
-    print("..........Starting IOS XRv9000 Sandbox Automation..........")
+    print(" Starting IOS XRv9000 Sandbox Automation")
     print("="*60)
-    print("Target: sandbox-iosxr-1.cisco.com (Cisco DevNet)")
-    print("Note: This is a SHARED sandbox - be respectful!")
+    print(" Target: sandbox-iosxr-1.cisco.com (Cisco DevNet)")
+    print(" Note: This is a SHARED sandbox - be respectful!")
     print("="*60)
     
     # Load configurations
@@ -200,10 +208,14 @@ def main():
         # Enter enable mode
         connection.enable()
         
+        # Optional: Clean up existing configs first
+        cleanup_existing_configs(connection)
+        
         # Show initial configuration
         print("\nInitial Sandbox State:")
-        initial_interfaces = connection.send_command("show interfaces description | include \\.")
-        print("Existing subinterfaces:", initial_interfaces if initial_interfaces else "None")
+        initial_interfaces = connection.send_command("show interfaces brief")
+        print("Existing interfaces:")
+        print(initial_interfaces)
         
         # Configure subinterfaces
         configure_subinterfaces(connection, vlan_config['subinterfaces'])
@@ -218,15 +230,11 @@ def main():
         save_iosxr_config(connection)
         
         print("\n" + "="*60)
-        print(" IOS XRv9000 Sandbox Configuration Completed!")
+        print("IOS XRv9000 Sandbox Configuration Completed!")
         print("="*60)
         
-        # Ask about cleanup (for shared sandbox)
-        if os.getenv('CLEANUP', 'false').lower() == 'true':
-            cleanup_configuration(connection)
-        
     except Exception as e:
-        print(f"Error during configuration: {str(e)}")
+        print(f" Error during configuration: {str(e)}")
         sys.exit(1)
     finally:
         connection.disconnect()

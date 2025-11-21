@@ -1,7 +1,7 @@
 {
   "network": {
-    "subnet": "10.0.0.0/8",
-    "gateway": "10.0.0.1",
+    "subnet": "172.20.10.0/28",
+    "gateway": "172.20.10.1",
     "dns_servers": ["8.8.8.8", "8.8.4.4"]
   },
   "devices": {
@@ -26,7 +26,7 @@
     "100": {"name": "Web-Servers", "purpose": "Web server network", "subnet": "192.168.10.0/24"},
     "200": {"name": "Database", "purpose": "Database server network", "subnet": "192.168.20.0/24"},
     "300": {"name": "Application", "purpose": "Application server network", "subnet": "192.168.30.0/24"}
-},
+  },
   "automation": {
     "ssh_timeout": 30,
     "config_timeout": 45,

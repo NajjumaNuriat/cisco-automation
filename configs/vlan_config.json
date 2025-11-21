@@ -1,11 +1,11 @@
 {
   "subinterfaces": [
     {
-      "parent_interface": "GigabitEthernet0/0/0/2",
-      "subinterface": "GigabitEthernet0/0/0/2.300",
-      "vlan_id": 300,
-      "description": "Application-Network",
-      "ip_address": "192.168.30.1",
+      "parent_interface": "GigabitEthernet0/0/0/0",
+      "subinterface": "GigabitEthernet0/0/0/0.100",
+      "vlan_id": 100,
+      "description": "Web-Servers-Network",
+      "ip_address": "192.168.10.1",
       "subnet_mask": "255.255.255.0"
     },
     {
@@ -13,7 +13,7 @@
       "subinterface": "GigabitEthernet0/0/0/1.200",
       "vlan_id": 200,
       "description": "Database-Network",
-      "ip_address": "192.168.200.1",
+      "ip_address": "192.168.20.1",
       "subnet_mask": "255.255.255.0"
     },
     {
@@ -21,20 +21,20 @@
       "subinterface": "GigabitEthernet0/0/0/2.300",
       "vlan_id": 300,
       "description": "Application-Network",
-      "ip_address": "192.168.300.1",
+      "ip_address": "192.168.30.1",
       "subnet_mask": "255.255.255.0"
     }
   ],
   "static_routes": [
     {
-      "network": "192.168.100.0",
+      "network": "192.168.10.0",
       "mask": "255.255.255.0",
       "next_hop": "Null0",
       "description": "Route-to-Web-Servers"
     },
     {
-      "network": "192.168.200.0",
-      "mask": "255.255.255.0", 
+      "network": "192.168.20.0",
+      "mask": "255.255.255.0",
       "next_hop": "Null0",
       "description": "Route-to-Database"
     }
