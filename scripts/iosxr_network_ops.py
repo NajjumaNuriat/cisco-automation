@@ -14,7 +14,7 @@ def load_config(config_file):
         with open(config_file, 'r') as file:
             return json.load(file)
     except Exception as e:
-        print(f"❌ Error loading config: {e}")
+        print(f" Error loading config: {e}")
         sys.exit(1)
 
 def connect_to_iosxr(device_info):
@@ -25,13 +25,13 @@ def connect_to_iosxr(device_info):
         device_info['timeout'] = 30
         device_info['session_timeout'] = 60
         
-        print(f"🔗 Connecting to {device_info['host']}:{device_info['port']}...")
+        print(f" Connecting to {device_info['host']}:{device_info['port']}...")
         connection = ConnectHandler(**device_info)
-        print("✅ Successfully connected to IOS XR sandbox")
+        print(" Successfully connected to IOS XR sandbox")
         return connection
     except Exception as e:
-        print(f"❌ IOS XR connection failed: {str(e)}")
-        print("\n🔧 Troubleshooting tips:")
+        print(f" IOS XR connection failed: {str(e)}")
+        print("\n Troubleshooting tips:")
         print("   1. Check if sandbox-iosxr-1.cisco.com is accessible")
         print("   2. Verify credentials: admin/C1sco12345")
         print("   3. Ensure your network can reach Cisco DevNet")
@@ -39,7 +39,7 @@ def connect_to_iosxr(device_info):
 
 def cleanup_existing_configs(connection):
     """Clean up existing subinterface configurations"""
-    print("\n🧹 Cleaning up existing subinterfaces...")
+    print("\n Cleaning up existing subinterfaces...")
     
     # List of subinterfaces to remove (including new ones)
     subinterfaces_to_remove = [
@@ -58,29 +58,29 @@ def cleanup_existing_configs(connection):
         commands = ["no router ospf 1"]
         output = connection.send_config_set(commands)
         commit_output = connection.send_command("commit", expect_string=r"#")
-        print("   ✅ Removed OSPF configuration")
+        print("    Removed OSPF configuration")
     except:
-        print("   ℹ️  No OSPF configuration to remove")
+        print("    No OSPF configuration to remove")
     
     for subif in subinterfaces_to_remove:
         try:
             commands = [f"no interface {subif}"]
             output = connection.send_config_set(commands)
             commit_output = connection.send_command("commit", expect_string=r"#")
-            print(f"   ✅ Removed {subif}")
+            print(f"    Removed {subif}")
         except Exception as e:
-            print(f"   ℹ️  Could not remove {subif}: {e}")
+            print(f"    Could not remove {subif}: {e}")
 
 def configure_subinterfaces(connection, subinterfaces):
     """Configure VLAN subinterfaces on IOS XR"""
-    print("🔄 Configuring VLAN subinterfaces...")
+    print(" Configuring VLAN subinterfaces...")
     
     # Track which interfaces we've configured to avoid duplicates
     configured_interfaces = set()
     
     for subif in subinterfaces:
         if subif['subinterface'] in configured_interfaces:
-            print(f"   ⚠️  Skipping duplicate: {subif['subinterface']}")
+            print(f"     Skipping duplicate: {subif['subinterface']}")
             continue
             
         commands = [
@@ -93,7 +93,7 @@ def configure_subinterfaces(connection, subinterfaces):
             "no shutdown"
         ]
         
-        print(f"🔧 Configuring {subif['subinterface']} for VLAN {subif['vlan_id']}...")
+        print(f" Configuring {subif['subinterface']} for VLAN {subif['vlan_id']}...")
         
         try:
             # Send configuration commands
@@ -101,18 +101,18 @@ def configure_subinterfaces(connection, subinterfaces):
             
             # Commit configuration (IOS XR specific)
             commit_output = connection.send_command("commit", expect_string=r"#")
-            print(f"   ✅ {subif['subinterface']} configured and committed")
+            print(f"    {subif['subinterface']} configured and committed")
             configured_interfaces.add(subif['subinterface'])
             
         except Exception as e:
-            print(f"❌ Error configuring {subif['subinterface']}: {e}")
+            print(f" Error configuring {subif['subinterface']}: {e}")
 
 def configure_static_routes(connection, routes):
     """Configure static routes on IOS XR"""
     if not routes:
         return
         
-    print("🛣️  Configuring static routes...")
+    print("  Configuring static routes...")
     
     try:
         commands = ["router static", "address-family ipv4 unicast"]
@@ -124,9 +124,9 @@ def configure_static_routes(connection, routes):
         # Send commands with proper expect string
         output = connection.send_config_set(commands)
         commit_output = connection.send_command("commit", expect_string=r"#")
-        print("   ✅ Static routes configured and committed")
+        print("    Static routes configured and committed")
     except Exception as e:
-        print(f"⚠️  Static routes configuration: {e}")
+        print(f"  Static routes configuration: {e}")
         # Continue execution even if routes fail
 
 def configure_routing_protocols(connection, routing_configs):
@@ -136,7 +136,7 @@ def configure_routing_protocols(connection, routing_configs):
         
     for routing_config in routing_configs:
         if routing_config['protocol'].lower() == 'ospf':
-            print(f"🔄 Configuring OSPF Process {routing_config['process_id']}...")
+            print(f" Configuring OSPF Process {routing_config['process_id']}...")
             
             try:
                 # Enter OSPF configuration mode
@@ -150,18 +150,18 @@ def configure_routing_protocols(connection, routing_configs):
                 # Send OSPF configuration
                 output = connection.send_config_set(commands)
                 commit_output = connection.send_command("commit", expect_string=r"#")
-                print(f"   ✅ OSPF Process {routing_config['process_id']} configured and committed")
+                print(f"    OSPF Process {routing_config['process_id']} configured and committed")
                 
             except Exception as e:
-                print(f"❌ Error configuring OSPF: {e}")
+                print(f" Error configuring OSPF: {e}")
 
 def verify_iosxr_configuration(connection):
     """Verify IOS XR configuration with proper commands"""
-    print("\n🔍 Verifying IOS XR Configuration...")
+    print("\n Verifying IOS XR Configuration...")
     
     try:
         # 1. Show interface status
-        print("\n📡 Interface Status:")
+        print("\n Interface Status:")
         try:
             interfaces_output = connection.send_command("show interfaces brief", expect_string=r"#")
             print(interfaces_output)
@@ -170,7 +170,7 @@ def verify_iosxr_configuration(connection):
             print(interfaces_output)
         
         # 2. Show our specific subinterfaces
-        print("\n✅ Our Configured Subinterfaces:")
+        print("\n Our Configured Subinterfaces:")
         try:
             config_output = connection.send_command("show running-config interface", expect_string=r"#")
         except:
@@ -186,12 +186,12 @@ def verify_iosxr_configuration(connection):
         
         for subif in our_subinterfaces:
             if subif in config_output:
-                print(f"   ✅ {subif} - Found in configuration")
+                print(f"    {subif} - Found in configuration")
             else:
-                print(f"   ❌ {subif} - NOT found in configuration")
+                print(f"    {subif} - NOT found in configuration")
         
         # 3. Show IP addresses
-        print("\n🌐 IP Address Assignment:")
+        print("\n IP Address Assignment:")
         try:
             ip_output = connection.send_command("show ipv4 interface brief", expect_string=r"#")
             print(ip_output)
@@ -200,15 +200,15 @@ def verify_iosxr_configuration(connection):
             print(ip_output)
         
         # 4. Show OSPF status
-        print("\n🛣️ OSPF Routing Status:")
+        print("\n OSPF Routing Status:")
         try:
             ospf_output = connection.send_command("show ospf interface brief", expect_string=r"#")
             print(ospf_output)
         except:
-            print("   ℹ️  OSPF not configured or cannot retrieve status")
+            print("     OSPF not configured or cannot retrieve status")
         
         # 5. Show routes
-        print("\n🗺️  Routing Table:")
+        print("\n  Routing Table:")
         try:
             routes_output = connection.send_command("show route ipv4", expect_string=r"#")
             # Show only OSPF and connected routes
@@ -222,28 +222,28 @@ def verify_iosxr_configuration(connection):
                     print(f"   {line}")
         
     except Exception as e:
-        print(f"❌ Verification failed: {e}")
+        print(f"Verification failed: {e}")
 
 def save_iosxr_config(connection):
     """Save configuration on IOS XR"""
-    print("💾 Saving IOS XR configuration...")
+    print(" Saving IOS XR configuration...")
     try:
         # IOS XR uses different save command
         save_output = connection.send_command("commit", expect_string=r"#")
-        print("   ✅ Configuration committed (changes applied)")
+        print("    Configuration committed (changes applied)")
         
         # Try to save to startup (may not work in sandbox)
         try:
             save_output = connection.send_command("admin save running-config startup-config", expect_string=r"#")
             if "successful" in save_output.lower() or "[ok]" in save_output.lower():
-                print("   ✅ Configuration saved to startup")
+                print("   Configuration saved to startup")
             else:
-                print("   ℹ️  Configuration may not persist after sandbox reset")
+                print("    Configuration may not persist after sandbox reset")
         except:
-            print("   ℹ️  Cannot save to startup in sandbox (normal for shared environment)")
+            print("    Cannot save to startup in sandbox (normal for shared environment)")
             
     except Exception as e:
-        print(f"   ℹ️  Save operation note: {e}")
+        print(f"    Save operation note: {e}")
 
 def main():
     # IOS XR sandbox connection parameters
@@ -256,17 +256,17 @@ def main():
         'port': int(os.getenv('SWITCH_PORT', 22)),
     }
     
-    print("🚀 Starting IOS XRv9000 Sandbox Automation")
+    print(" Starting IOS XRv9000 Sandbox Automation")
     print("="*60)
-    print("🎯 Target: sandbox-iosxr-1.cisco.com (Cisco DevNet)")
-    print("📝 Note: This is a SHARED sandbox - be respectful!")
+    print(" Target: sandbox-iosxr-1.cisco.com (Cisco DevNet)")
+    print(" Note: This is a SHARED sandbox - be respectful!")
     print("="*60)
     
     # Load configurations
     vlan_config = load_config('../configs/vlan_config.json')
     network_config = load_config('../configs/network_config.json')
     
-    print(f"📁 Configuration: {len(vlan_config['subinterfaces'])} subinterfaces, {len(vlan_config.get('routing_protocols', []))} routing protocols")
+    print(f" Configuration: {len(vlan_config['subinterfaces'])} subinterfaces, {len(vlan_config.get('routing_protocols', []))} routing protocols")
     
     # Connect to IOS XR sandbox
     connection = connect_to_iosxr(device_info)
@@ -279,13 +279,13 @@ def main():
         cleanup_existing_configs(connection)
         
         # Show initial configuration (simplified to avoid errors)
-        print("\n📋 Initial Sandbox State:")
+        print("\n Initial Sandbox State:")
         try:
             initial_interfaces = connection.send_command("show interfaces brief", expect_string=r"#")
             print("Existing interfaces:")
             print(initial_interfaces)
         except:
-            print("   ℹ️  Could not retrieve initial interface state (continuing...)")
+            print("  Could not retrieve initial interface state (continuing...)")
         
         # Configure subinterfaces
         configure_subinterfaces(connection, vlan_config['subinterfaces'])
@@ -301,11 +301,11 @@ def main():
         save_iosxr_config(connection)
         
         print("\n" + "="*60)
-        print("✅ IOS XRv9000 Sandbox Configuration Completed!")
+        print(" IOS XRv9000 Sandbox Configuration Completed!")
         print("="*60)
         
     except Exception as e:
-        print(f"❌ Error during configuration: {str(e)}")
+        print(f" Error during configuration: {str(e)}")
         sys.exit(1)
     finally:
         connection.disconnect()

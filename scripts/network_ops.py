@@ -101,7 +101,7 @@ def main():
         connection.enable()
         
         # Show current VLAN status
-        print("📋 Current VLAN configuration:")
+        print("Current VLAN configuration:")
         vlan_output = connection.send_command("show vlan brief")
         print(vlan_output)
         
