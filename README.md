@@ -41,3 +41,28 @@ Edit `configs/vlan_config.json` to:
 - Credentials stored in GitHub Secrets
 - Manual deployment required
 - Configuration validated before deployment
+
+# Cisco IOS XR Network Automation
+
+CI/CD pipeline for automating VLAN and interface configuration on Cisco IOS XR.
+
+## 🚀 Quick Start
+
+### 1. Configure Network
+
+Edit `configs/vlan_config.json`:
+
+```json
+{
+  "subinterfaces": [
+    {
+      "parent_interface": "GigabitEthernet0/0/0/0",
+      "subinterface": "GigabitEthernet0/0/0/0.100",
+      "vlan_id": 100,
+      "description": "Web-Servers",
+      "ip_address": "192.168.10.1",
+      "subnet_mask": "255.255.255.0"
+    }
+  ]
+}
+```
