@@ -1,14 +1,42 @@
 {
-  "vlans": [
-    {"id": 60, "name": "Guest"},
-    {"id": 70, "name": "VoIP"},
-    {"id": 80, "name": "Security"},
-    {"id": 90, "name": "IoT"}
+  "subinterfaces": [
+    {
+      "parent_interface": "GigabitEthernet0/0/0/2",
+      "subinterface": "GigabitEthernet0/0/0/2.300",
+      "vlan_id": 300,
+      "description": "Application-Network",
+      "ip_address": "192.168.30.1",
+      "subnet_mask": "255.255.255.0"
+    },
+    {
+      "parent_interface": "GigabitEthernet0/0/0/1",
+      "subinterface": "GigabitEthernet0/0/0/1.200",
+      "vlan_id": 200,
+      "description": "Database-Network",
+      "ip_address": "192.168.200.1",
+      "subnet_mask": "255.255.255.0"
+    },
+    {
+      "parent_interface": "GigabitEthernet0/0/0/2",
+      "subinterface": "GigabitEthernet0/0/0/2.300",
+      "vlan_id": 300,
+      "description": "Application-Network",
+      "ip_address": "192.168.300.1",
+      "subnet_mask": "255.255.255.0"
+    }
   ],
-  "interfaces": [
-    {"interface": "FastEthernet0/8", "description": "Guest WiFi Access Point", "vlan": 60, "mode": "access"},
-    {"interface": "FastEthernet0/9", "description": "VoIP Phone System", "vlan": 70, "mode": "access"},
-    {"interface": "FastEthernet0/10", "description": "Security Camera", "vlan": 80, "mode": "access"},
-    {"interface": "FastEthernet0/11", "description": "IoT Device", "vlan": 90, "mode": "access"}
+  "static_routes": [
+    {
+      "network": "192.168.100.0",
+      "mask": "255.255.255.0",
+      "next_hop": "Null0",
+      "description": "Route-to-Web-Servers"
+    },
+    {
+      "network": "192.168.200.0",
+      "mask": "255.255.255.0", 
+      "next_hop": "Null0",
+      "description": "Route-to-Database"
+    }
   ]
 }

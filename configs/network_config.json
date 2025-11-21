@@ -1,32 +1,35 @@
 {
   "network": {
-    "subnet": "172.20.10.0/28",
-    "gateway": "172.20.10.1",
+    "subnet": "10.0.0.0/8",
+    "gateway": "10.0.0.1",
     "dns_servers": ["8.8.8.8", "8.8.4.4"]
   },
   "devices": {
-    "core_switch": {
-      "name": "Core-Switch-1",
-      "ip_address": "172.20.10.3",
-      "device_type": "cisco_ios",
+    "ios_xr_router": {
+      "name": "sandbox-iosxr-1",
+      "ip_address": "sandbox-iosxr-1.cisco.com",
+      "device_type": "cisco_xr",
       "credentials": {
         "username": "admin",
-        "password": "cisco",
-        "enable_password": "cisco",
+        "password": "C1sco12345",
+        "enable_password": "C1sco12345",
         "port": 22
+      },
+      "advanced_ports": {
+        "netconf_port": 830,
+        "bash_port": 57722,
+        "grpc_port": 57777
       }
     }
   },
   "vlans": {
-    "10": {"name": "Management", "purpose": "Network management"},
-    "20": {"name": "HR", "purpose": "Human Resources department"},
-    "30": {"name": "Finance", "purpose": "Finance department"},
-    "40": {"name": "IT", "purpose": "IT department"},
-    "50": {"name": "Operations", "purpose": "Operations department"}
-  },
+    "100": {"name": "Web-Servers", "purpose": "Web server network", "subnet": "192.168.10.0/24"},
+    "200": {"name": "Database", "purpose": "Database server network", "subnet": "192.168.20.0/24"},
+    "300": {"name": "Application", "purpose": "Application server network", "subnet": "192.168.30.0/24"}
+},
   "automation": {
-    "ssh_timeout": 10,
-    "config_timeout": 30,
+    "ssh_timeout": 30,
+    "config_timeout": 45,
     "retry_attempts": 3
   }
 }
