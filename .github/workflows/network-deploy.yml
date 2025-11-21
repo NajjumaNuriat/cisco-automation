@@ -37,40 +37,40 @@ jobs:
                   print(f'  - {subif[\"subinterface\"]}: VLAN {subif[\"vlan_id\"]}')
           "
 
-  deploy-to-iosxr:
+    deploy-to-iosxr:
     name: Deploy to IOS XR Sandbox
     runs-on: ubuntu-latest
     needs: validate-configuration
-    if: github.event_name == 'workflow_dispatch' # Manual deployment only
-
+    if: github.event_name == 'workflow_dispatch'
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.9"
-
-      - name: Install dependencies
-        run: |
-          pip install -r scripts/requirements.txt
-
-      - name: Deploy to IOS XR Sandbox
-        run: |
-          echo "........Deploying to Cisco IOS XRv9000 Sandbox..."
-          echo "Target: sandbox-iosxr-1.cisco.com"
-          echo "REMEMBER: This is a SHARED sandbox - be respectful!"
-          cd scripts
-          python iosxr_network_ops.py
-        env:
-          SWITCH_IP: ${{ secrets.IOSXR_IP }}
-          SWITCH_USERNAME: ${{ secrets.IOSXR_USERNAME }}
-          SWITCH_PASSWORD: ${{ secrets.IOSXR_PASSWORD }}
-          SWITCH_ENABLE_PASSWORD: ${{ secrets.IOSXR_ENABLE_PASSWORD }}
-
-      - name: Deployment summary
-        run: |
-          echo ""IOS XR deployment completed successfully!"
-          echo "Switch: ${{ secrets.IOSXR_IP }}"
-          echo "Timestamp: $(date)"
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+      
+    - name: Install dependencies
+      run: |
+        pip install -r scripts/requirements.txt
+      
+    - name: Deploy to IOS XR Sandbox
+      run: |
+        echo "Deploying to Cisco IOS XRv9000 Sandbox..."
+        echo "Target: sandbox-iosxr-1.cisco.com"
+        echo "REMEMBER: This is a SHARED sandbox - be respectful!"
+        cd scripts
+        python iosxr_network_ops.py
+      env:
+        SWITCH_IP: ${{ secrets.IOSXR_IP }}
+        SWITCH_USERNAME: ${{ secrets.IOSXR_USERNAME }}
+        SWITCH_PASSWORD: ${{ secrets.IOSXR_PASSWORD }}
+        SWITCH_ENABLE_PASSWORD: ${{ secrets.IOSXR_ENABLE_PASSWORD }}
+      
+    - name: Deployment summary
+      run: |
+        echo "IOS XR deployment completed successfully!"
+        echo "Switch: ${{ secrets.IOSXR_IP }}"
+        echo "Timestamp: $(date)"
