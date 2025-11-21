@@ -2,46 +2,55 @@ name: Network Configuration CI/CD
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
-  workflow_dispatch: # Manual trigger
+    branches: [ main ]
+  workflow_dispatch:  # Manual trigger
 
 jobs:
   validate-configuration:
     name: Validate Configuration
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Validate JSON syntax
+      run: |
+        echo "Validating configuration files..."
+        python -m json.tool configs/network_config.json
+        python -m json.tool configs/vlan_config.json
+        echo " All configuration files are valid"
+      
+    - name: Show deployment plan
+      run: |
+        echo " IOS XR Deployment Plan:"
+        echo "--------------------------"
+        echo "Target: sandbox-iosxr-1.cisco.com"
+        echo "VLANs to be created:"
+        python3 -c "
+        import json
+        with open('configs/vlan_config.json') as f:
+            config = json.load(f)
+            for subif in config['subinterfaces']:
+                print(f'  - {subif[\"subinterface\"]}: VLAN {subif[\"vlan_id\"]}')
+        "
+        echo ""
+        echo "Interfaces to configure:"
+        python3 -c "
+        import json
+        with open('configs/vlan_config.json') as f:
+            config = json.load(f)
+            for subif in config['subinterfaces']:
+                print(f'  - {subif[\"subinterface\"]}: {subif[\"description\"]}')
+        "
 
-      - name: Validate JSON syntax
-        run: |
-          echo "...............Validating configuration files..."
-          python -m json.tool configs/network_config.json
-          python -m json.tool configs/vlan_config.json
-          echo "All configuration files are valid"
-
-      - name: Show deployment plan
-        run: |
-          echo "IOS XR Deployment Plan:"
-          echo "--------------------------"
-          echo "Target: sandbox-iosxr-1.cisco.com"
-          echo "VLANs to be created:"
-          python3 -c "
-          import json
-          with open('configs/vlan_config.json') as f:
-              config = json.load(f)
-              for subif in config['subinterfaces']:
-                  print(f'  - {subif[\"subinterface\"]}: VLAN {subif[\"vlan_id\"]}')
-          "
-
-    deploy-to-iosxr:
+  deploy-to-iosxr:
     name: Deploy to IOS XR Sandbox
     runs-on: ubuntu-latest
     needs: validate-configuration
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch'  # Manual deployment only
     
     steps:
     - name: Checkout code
@@ -58,8 +67,8 @@ jobs:
       
     - name: Deploy to IOS XR Sandbox
       run: |
-        echo "Deploying to Cisco IOS XRv9000 Sandbox..."
-        echo "Target: sandbox-iosxr-1.cisco.com"
+        echo " Deploying to Cisco IOS XRv9000 Sandbox..."
+        echo " Target: sandbox-iosxr-1.cisco.com"
         echo "REMEMBER: This is a SHARED sandbox - be respectful!"
         cd scripts
         python iosxr_network_ops.py
@@ -71,6 +80,6 @@ jobs:
       
     - name: Deployment summary
       run: |
-        echo "IOS XR deployment completed successfully!"
-        echo "Switch: ${{ secrets.IOSXR_IP }}"
-        echo "Timestamp: $(date)"
+        echo " IOS XR deployment completed successfully!"
+        echo " Switch: ${{ secrets.IOSXR_IP }}"
+        echo " Timestamp: $(date)"
