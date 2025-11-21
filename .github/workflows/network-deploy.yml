@@ -5,7 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-  workflow_dispatch: # Manual trigger is kept as an option
+  workflow_dispatch: # Manual trigger
 
 jobs:
   validate-configuration:
@@ -36,12 +36,21 @@ jobs:
               for subif in config['subinterfaces']:
                   print(f'  - {subif[\"subinterface\"]}: VLAN {subif[\"vlan_id\"]}')
           "
+          echo ""
+          echo "Routing Protocols:"
+          python3 -c "
+          import json
+          with open('configs/vlan_config.json') as f:
+              config = json.load(f)
+              if 'routing_protocols' in config:
+                  for proto in config['routing_protocols']:
+                      print(f'  - {proto[\"protocol\"].upper()} Process {proto[\"process_id\"]}')
+          "
 
   deploy-to-iosxr:
     name: Deploy to IOS XR Sandbox
     runs-on: ubuntu-latest
     needs: validate-configuration
-    # The 'if' condition has been removed, so this job will now run automatically.
 
     steps:
       - name: Checkout code

@@ -14,18 +14,19 @@
         "password": "C1sco12345",
         "enable_password": "C1sco12345",
         "port": 22
-      },
-      "advanced_ports": {
-        "netconf_port": 830,
-        "bash_port": 57722,
-        "grpc_port": 57777
       }
     }
   },
   "vlans": {
-    "100": {"name": "Web-Servers", "purpose": "Web server network", "subnet": "192.168.10.0/24"},
-    "200": {"name": "Database", "purpose": "Database server network", "subnet": "192.168.20.0/24"},
-    "300": {"name": "Application", "purpose": "Application server network", "subnet": "192.168.30.0/24"}
+    "10": {"name": "MGMT-Network", "purpose": "Management network", "subnet": "10.10.10.0/24"},
+    "20": {"name": "HR-Department", "purpose": "Human Resources department", "subnet": "10.10.20.0/24"},
+    "30": {"name": "IT-Department", "purpose": "IT department network", "subnet": "10.10.30.0/24"},
+    "40": {"name": "Finance-Dept", "purpose": "Finance department", "subnet": "10.10.40.0/24"}
+  },
+  "routing": {
+    "protocol": "OSPF",
+    "process_id": 1,
+    "area": "0"
   },
   "automation": {
     "ssh_timeout": 30,

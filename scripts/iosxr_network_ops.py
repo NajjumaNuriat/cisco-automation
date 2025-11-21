@@ -41,13 +41,26 @@ def cleanup_existing_configs(connection):
     """Clean up existing subinterface configurations"""
     print("\n🧹 Cleaning up existing subinterfaces...")
     
-    # List of subinterfaces to remove
+    # List of subinterfaces to remove (including new ones)
     subinterfaces_to_remove = [
         "GigabitEthernet0/0/0/0.100",
         "GigabitEthernet0/0/0/0.400", 
         "GigabitEthernet0/0/0/1.200",
-        "GigabitEthernet0/0/0/2.300"
+        "GigabitEthernet0/0/0/2.300",
+        "GigabitEthernet0/0/0/0.10",
+        "GigabitEthernet0/0/0/1.20",
+        "GigabitEthernet0/0/0/2.30",
+        "GigabitEthernet0/0/0/3.40"
     ]
+    
+    # Also remove OSPF configuration
+    try:
+        commands = ["no router ospf 1"]
+        output = connection.send_config_set(commands)
+        commit_output = connection.send_command("commit", expect_string=r"#")
+        print("   ✅ Removed OSPF configuration")
+    except:
+        print("   ℹ️  No OSPF configuration to remove")
     
     for subif in subinterfaces_to_remove:
         try:
@@ -116,12 +129,38 @@ def configure_static_routes(connection, routes):
         print(f"⚠️  Static routes configuration: {e}")
         # Continue execution even if routes fail
 
+def configure_routing_protocols(connection, routing_configs):
+    """Configure routing protocols on IOS XR"""
+    if not routing_configs:
+        return
+        
+    for routing_config in routing_configs:
+        if routing_config['protocol'].lower() == 'ospf':
+            print(f"🔄 Configuring OSPF Process {routing_config['process_id']}...")
+            
+            try:
+                # Enter OSPF configuration mode
+                commands = [f"router ospf {routing_config['process_id']}"]
+                
+                # Add network statements
+                for network in routing_config['networks']:
+                    network_cmd = f"area {network['area']} range {network['network']}"
+                    commands.append(f"network {network['network']} {network['wildcard']} area {network['area']}")
+                
+                # Send OSPF configuration
+                output = connection.send_config_set(commands)
+                commit_output = connection.send_command("commit", expect_string=r"#")
+                print(f"   ✅ OSPF Process {routing_config['process_id']} configured and committed")
+                
+            except Exception as e:
+                print(f"❌ Error configuring OSPF: {e}")
+
 def verify_iosxr_configuration(connection):
     """Verify IOS XR configuration with proper commands"""
     print("\n🔍 Verifying IOS XR Configuration...")
     
     try:
-        # 1. Show interface status (correct IOS XR command)
+        # 1. Show interface status
         print("\n📡 Interface Status:")
         try:
             interfaces_output = connection.send_command("show interfaces brief", expect_string=r"#")
@@ -139,9 +178,10 @@ def verify_iosxr_configuration(connection):
         
         # Check if our subinterfaces exist in the config
         our_subinterfaces = [
-            "GigabitEthernet0/0/0/0.100",
-            "GigabitEthernet0/0/0/1.200", 
-            "GigabitEthernet0/0/0/2.300"
+            "GigabitEthernet0/0/0/0.10",
+            "GigabitEthernet0/0/0/1.20", 
+            "GigabitEthernet0/0/0/2.30",
+            "GigabitEthernet0/0/0/3.40"
         ]
         
         for subif in our_subinterfaces:
@@ -150,7 +190,7 @@ def verify_iosxr_configuration(connection):
             else:
                 print(f"   ❌ {subif} - NOT found in configuration")
         
-        # 3. Show IP addresses (correct IOS XR command)
+        # 3. Show IP addresses
         print("\n🌐 IP Address Assignment:")
         try:
             ip_output = connection.send_command("show ipv4 interface brief", expect_string=r"#")
@@ -159,17 +199,27 @@ def verify_iosxr_configuration(connection):
             ip_output = connection.send_command("show ipv4 interface brief")
             print(ip_output)
         
-        # 4. Show routes (correct IOS XR command)
-        print("\n🛣️  IPv4 Routing Table (Our Networks):")
+        # 4. Show OSPF status
+        print("\n🛣️ OSPF Routing Status:")
+        try:
+            ospf_output = connection.send_command("show ospf interface brief", expect_string=r"#")
+            print(ospf_output)
+        except:
+            print("   ℹ️  OSPF not configured or cannot retrieve status")
+        
+        # 5. Show routes
+        print("\n🗺️  Routing Table:")
         try:
             routes_output = connection.send_command("show route ipv4", expect_string=r"#")
+            # Show only OSPF and connected routes
+            for line in routes_output.split('\n'):
+                if "OSPF" in line or "Connected" in line or "10.10." in line:
+                    print(f"   {line}")
         except:
             routes_output = connection.send_command("show route ipv4")
-        
-        # Filter to show only our configured networks
-        for line in routes_output.split('\n'):
-            if any(network in line for network in ['192.168.10', '192.168.20', '192.168.30', '192.168.100', '192.168.200']):
-                print(f"   {line}")
+            for line in routes_output.split('\n'):
+                if "OSPF" in line or "Connected" in line or "10.10." in line:
+                    print(f"   {line}")
         
     except Exception as e:
         print(f"❌ Verification failed: {e}")
@@ -216,7 +266,7 @@ def main():
     vlan_config = load_config('../configs/vlan_config.json')
     network_config = load_config('../configs/network_config.json')
     
-    print(f"📁 Configuration: {len(vlan_config['subinterfaces'])} subinterfaces, {len(vlan_config.get('static_routes', []))} routes")
+    print(f"📁 Configuration: {len(vlan_config['subinterfaces'])} subinterfaces, {len(vlan_config.get('routing_protocols', []))} routing protocols")
     
     # Connect to IOS XR sandbox
     connection = connect_to_iosxr(device_info)
@@ -240,8 +290,9 @@ def main():
         # Configure subinterfaces
         configure_subinterfaces(connection, vlan_config['subinterfaces'])
         
-        # Configure static routes
-        configure_static_routes(connection, vlan_config.get('static_routes', []))
+        # Configure routing protocols
+        if 'routing_protocols' in vlan_config:
+            configure_routing_protocols(connection, vlan_config['routing_protocols'])
         
         # Verify configuration
         verify_iosxr_configuration(connection)

@@ -1,29 +1,64 @@
 {
   "subinterfaces": [
-    
-     {
+    {
       "parent_interface": "GigabitEthernet0/0/0/0",
-      "subinterface": "GigabitEthernet0/0/0/0.100",
-      "vlan_id": 100,
-      "description": "Production-Web-Servers",
-      "ip_address": "192.168.10.1",
+      "subinterface": "GigabitEthernet0/0/0/0.10",
+      "vlan_id": 10,
+      "description": "MGMT-Network",
+      "ip_address": "10.10.10.1",
       "subnet_mask": "255.255.255.0"
     },
     {
       "parent_interface": "GigabitEthernet0/0/0/1",
-      "subinterface": "GigabitEthernet0/0/0/1.200",
-      "vlan_id": 200,
-      "description": "Database-Network",
-      "ip_address": "192.168.20.1",
+      "subinterface": "GigabitEthernet0/0/0/1.20",
+      "vlan_id": 20,
+      "description": "HR-Department",
+      "ip_address": "10.10.20.1",
       "subnet_mask": "255.255.255.0"
     },
     {
       "parent_interface": "GigabitEthernet0/0/0/2",
-      "subinterface": "GigabitEthernet0/0/0/2.300",
-      "vlan_id": 300,
-      "description": "Application-Network",
-      "ip_address": "192.168.30.1",
+      "subinterface": "GigabitEthernet0/0/0/2.30",
+      "vlan_id": 30,
+      "description": "IT-Department",
+      "ip_address": "10.10.30.1",
       "subnet_mask": "255.255.255.0"
+    },
+    {
+      "parent_interface": "GigabitEthernet0/0/0/3",
+      "subinterface": "GigabitEthernet0/0/0/3.40",
+      "vlan_id": 40,
+      "description": "Finance-Dept",
+      "ip_address": "10.10.40.1",
+      "subnet_mask": "255.255.255.0"
+    }
+  ],
+  "routing_protocols": [
+    {
+      "protocol": "ospf",
+      "process_id": 1,
+      "networks": [
+        {
+          "network": "10.10.10.0",
+          "wildcard": "0.0.0.255",
+          "area": "0"
+        },
+        {
+          "network": "10.10.20.0",
+          "wildcard": "0.0.0.255",
+          "area": "0"
+        },
+        {
+          "network": "10.10.30.0",
+          "wildcard": "0.0.0.255",
+          "area": "0"
+        },
+        {
+          "network": "10.10.40.0",
+          "wildcard": "0.0.0.255",
+          "area": "0"
+        }
+      ]
     }
   ]
 }
